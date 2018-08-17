@@ -30,28 +30,33 @@ public class CryptoRepositoryImpl implements CryptoRepository {
     MediatorLiveData<List<CoinModel>> mDataMerger = new MediatorLiveData<>();
     MediatorLiveData<String> mErrorMerger = new MediatorLiveData<>();
 
-    private CryptoRepositoryImpl(RemoteDataSource mRemoteDataSource, LocalDataSource mLocalDataSource, CryptoMapper mapper) {
-        this.mRemoteDataSource = mRemoteDataSource;
-        this.mLocalDataSource = mLocalDataSource;
+    private CryptoRepositoryImpl(RemoteDataSource remoteDataSource, LocalDataSource localDataSource, CryptoMapper mapper) {
+        this.mRemoteDataSource = remoteDataSource;
+        this.mLocalDataSource = localDataSource;
         mMapper = mapper;
-        mDataMerger.addSource(this.mRemoteDataSource.getDataStream(), entities ->
-                mExecutor.execute(new Runnable() {
+        mDataMerger.addSource(mRemoteDataSource.getDataStream(), new Observer<List<CryptoCoinEntity>>() {
                     @Override
-                    public void run() {
-                        mLocalDataSource.writeData(mMapper.mapEntitiesToString(entities));
-                        List<CoinModel> list = mMapper.mapEntityToModel(entities);
-                        mDataMerger.postValue(list);
-
-                    }
-                })
-        );
-        mDataMerger.addSource(this.mLocalDataSource.getDataStream(), new Observer<JSONArray>() {
-                    @Override
-                    public void onChanged(@Nullable JSONArray json) {
+                    public void onChanged(@Nullable final List<CryptoCoinEntity> entities) {
                         mExecutor.execute(new Runnable() {
                             @Override
                             public void run() {
-                                List<CryptoCoinEntity> entities = mMapper.mapJSONToEntity(json.toString());
+                                Log.d(TAG, "mDataMerger\tmRemoteDataSource onChange invoked");
+                                mLocalDataSource.writeData(entities);
+                                List<CoinModel> list = mMapper.mapEntityToModel(entities);
+                                mDataMerger.postValue(list);
+
+                            }
+                        });
+                    }
+                }
+        );
+        mDataMerger.addSource(this.mLocalDataSource.getDataStream(), new Observer<List<CryptoCoinEntity>>() {
+                    @Override
+                    public void onChanged(@Nullable final List<CryptoCoinEntity> entities) {
+                        mExecutor.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.d(TAG, "mDataMerger\tmLocalDataSource onChange invoked");
                                 List<CoinModel> models = mMapper.mapEntityToModel(entities);
                                 mDataMerger.postValue(models);
                             }
@@ -65,7 +70,14 @@ public class CryptoRepositoryImpl implements CryptoRepository {
                     public void onChanged(@Nullable String errorStr) {
                         mErrorMerger.setValue(errorStr);
                         Log.d(TAG, "Network error -> fetching from LocalDataSource");
-                        mLocalDataSource.fetch();
+                        mExecutor.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                List<CryptoCoinEntity> entities = (mLocalDataSource.getAllCoins());
+                                mDataMerger.postValue(mMapper.mapEntityToModel(entities));
+                            }
+                        });
+
                     }
                 }
         );

@@ -1,5 +1,12 @@
 package com.radhe.data.entity;
 
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
+import android.arch.persistence.room.Index;
+import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -8,16 +15,31 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Created by omrierez on 18.08.17.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+
+@Entity(tableName = "coins",
+        indices = {@Index("symbol"),
+                @Index("total_supply"),
+                @Index({"id","symbol"})})
+
 public class CryptoCoinEntity {
-    //We are going to get a list of these entities from our api dial - this entity is immutable
+    //We are going to get a list of these entities from our api call - this entity is immutable
     @JsonProperty("id")
+    @ColumnInfo(name="id")
     private String id;
+
     @JsonProperty("name")
+    @ColumnInfo(name="n")
     private String name;
+
     @JsonProperty("symbol")
+    @PrimaryKey
+    @NonNull
     private String symbol;
+
     @JsonProperty("rank")
+    @ColumnInfo(name="rank")
     private String rank;
+
     @JsonProperty("price_usd")
     private String priceUsd;
     @JsonProperty("price_btc")
@@ -28,15 +50,24 @@ public class CryptoCoinEntity {
     private String marketCapUsd;
     @JsonProperty("available_supply")
     private String availableSupply;
+
     @JsonProperty("total_supply")
+    @ColumnInfo(name="total_supply")
     private String totalSupply;
+
+    @ColumnInfo(name="percent_change_1h")
     @JsonProperty("percent_change_1h")
     private String percentChange1h;
+
     @JsonProperty("percent_change_24h")
     private String percentChange24h;
+
     @JsonProperty("percent_change_7d")
+    @Ignore
     private String percentChange7d;
+
     @JsonProperty("last_updated")
+    @Ignore
     private String lastUpdated;
     @JsonIgnore
 

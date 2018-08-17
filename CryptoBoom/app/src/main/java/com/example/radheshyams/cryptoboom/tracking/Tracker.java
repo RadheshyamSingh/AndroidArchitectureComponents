@@ -23,32 +23,33 @@ import java.util.HashMap;
 
 public class Tracker implements LifecycleObserver{
     private static final String TAG = Tracker.class.getSimpleName();
-    private final String TRACKING_URL = "https://www.google.com";
+    private final String TRACKING_URL = "https://httpbin.org/post";
     private final RequestQueue mQueue;
     private final String mOsVersion;
-    private final Context mContext;
+    private Context mCon;
 
-    public Tracker(Context context) {
+    public Tracker(Context con) {
+        mCon=con;
         mOsVersion = Build.VERSION.RELEASE;
-        mQueue = Volley.newRequestQueue(context);
-        mContext = context;
-        ((AppCompatActivity)context).getLifecycle().addObserver(this);
-
+        mQueue = Volley.newRequestQueue(con.getApplicationContext());
+        ((AppCompatActivity) con).getLifecycle().addObserver(this);
     }
 
     private StringRequest generateTrackingStringRequest(final String eventName) {
-        return new StringRequest(Request.Method.POST, TRACKING_URL, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                Log.d(TAG, "onResponse() called with: response = [" + response + "]");
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.d(TAG, "onErrorResponse() called with: error = [" + error + "]");
-            }
+        return new StringRequest(Request.Method.POST, TRACKING_URL,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // Log.d(TAG, "onResponse() called with: response = [" + response + "]");
 
-        }){
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.d(TAG, "onErrorResponse() called with: error = [" + error + "]");
+                    }
+                }) {
             @Override
             public byte[] getBody() throws AuthFailureError {
                 HashMap<String, String> params = new HashMap<>();
@@ -61,42 +62,51 @@ public class Tracker implements LifecycleObserver{
 
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     public void trackOnCreate() {
-        Log.d(TAG, "trackOnCreate called");
+        Log.d(TAG, "trackOnCreate() called");
         mQueue.add(generateTrackingStringRequest("create"));
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
     public void trackOnDestroy() {
-        Log.d(TAG, "trackOnDestroy called");
-        ((AppCompatActivity)mContext).getLifecycle().removeObserver(this);
+        Log.d(TAG, "trackOnDestroy() called");
+        ((AppCompatActivity)mCon).getLifecycle().removeObserver(this);
         mQueue.add(generateTrackingStringRequest("destroy"));
+        Lifecycle.State currentState=((AppCompatActivity)mCon).getLifecycle().getCurrentState();
+        mCon=null;
+
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     public void trackOnStart() {
-        Log.d(TAG, "trackOnStart called");
+        Log.d(TAG, "trackOnStart() called");
         mQueue.add(generateTrackingStringRequest("start"));
+
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     public void trackOnResume() {
-        Log.d(TAG, "trackOnResume called");
+        Log.d(TAG, "trackOnResume() called");
         mQueue.add(generateTrackingStringRequest("resume"));
+
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     public void trackOnPause() {
-        Log.d(TAG, "trackOnPause called");
+        Log.d(TAG, "trackOnPause() called");
         mQueue.add(generateTrackingStringRequest("pause"));
+
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     public void trackOnStop() {
-        Log.d(TAG, "trackOnStop called");
+        Log.d(TAG, "trackOnStop() called");
         mQueue.add(generateTrackingStringRequest("stop"));
+
     }
 
-    public void trackLocation(int lat, int lng) {
+    public void trackLocation(double lat, double lng) {
+        Log.d(TAG, "trackLocation() called with: lat = [" + lat + "], lng = [" + lng + "]");
         mQueue.add(generateTrackingStringRequest("location\t" + lat + "-" + lng));
+
     }
 }

@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.example.radheshyams.cryptoboom.R;
+import com.radhe.data.models.CoinModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +25,9 @@ public class MyCryptoAdapter extends RecyclerView.Adapter<MyCryptoAdapter.CoinVi
         final CoinModel model = mItems.get(position);
         holder.tvNameAndSymbol.setText(String.format(STR_TEMPLATE_NAME, model.name, model.symbol));
         holder.tvPriceAndVolume.setText(String.format(STR_TEMPLATE_PRICE, model.priceUsd, model.volume24H));
-        Glide.with(holder.ivIcon).load(model.imageUrl).into(holder.ivIcon);
+        // getting hardcoded image
+        int id = position % 2 == 0 ? R.drawable.bitcoin : R.drawable.ethereum;
+        Glide.with(holder.ivIcon).load(id).into(holder.ivIcon);
     }
 
     @Override

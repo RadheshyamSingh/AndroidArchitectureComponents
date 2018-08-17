@@ -18,16 +18,15 @@ import org.json.JSONArray;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RemoteDataSource implements DataSource<List<CryptoCoinEntity>>{
+public class RemoteDataSource implements DataSource<List<CryptoCoinEntity>> {
     private static final String TAG = RemoteDataSource.class.getSimpleName();
     public final String ENDPOINT_FETCH_CRYPTO_DATA = "https://api.coinmarketcap.com/v1/ticker/?limit=100";
     private final RequestQueue mQueue;
     private final CryptoMapper mObjMapper;
     private final MutableLiveData<String> mError=new MutableLiveData<>();
     private final MutableLiveData<List<CryptoCoinEntity>> mDataApi=new MutableLiveData<>();
-
-    public RemoteDataSource(Context context, CryptoMapper objMapper){
-        mQueue = Volley.newRequestQueue(context);
+    public RemoteDataSource(Context appContext,CryptoMapper objMapper) {
+        mQueue = Volley.newRequestQueue(appContext);
         mObjMapper=objMapper;
     }
 
@@ -63,4 +62,7 @@ public class RemoteDataSource implements DataSource<List<CryptoCoinEntity>>{
                         });
         mQueue.add(jsonObjReq);
     }
+
+
+
 }

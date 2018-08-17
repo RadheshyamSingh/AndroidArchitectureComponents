@@ -1,6 +1,6 @@
 package com.example.radheshyams.cryptoboom.screens;
 
-import com.example.radheshyams.cryptoboom.recyclerview.CoinModel;
+import com.radhe.data.models.CoinModel;
 
 import java.util.List;
 

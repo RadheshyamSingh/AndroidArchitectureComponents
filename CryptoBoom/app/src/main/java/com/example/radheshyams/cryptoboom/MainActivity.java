@@ -15,7 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.example.radheshyams.cryptoboom.recyclerview.CoinModel;
+import com.example.radheshyams.cryptoboom.fragments.UILessFragment;
 import com.example.radheshyams.cryptoboom.recyclerview.Divider;
 import com.example.radheshyams.cryptoboom.recyclerview.MyCryptoAdapter;
 import com.example.radheshyams.cryptoboom.screens.MainScreen;
@@ -52,12 +52,12 @@ public class MainActivity extends LocationActivity implements MainScreen {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         bindViews();
-        mViewModel = ViewModelProviders.of(this).get(CryptoViewModel.class);
-        mViewModel.setAppContext(getApplicationContext());
+        mViewModel= ViewModelProviders.of(this).get(CryptoViewModel.class);
         mViewModel.getCoinsMarketData().observe(this, dataObserver);
         mViewModel.getErrorUpdates().observe(this, errorObserver);
-
-        //getSupportFragmentManager().beginTransaction().add(new UILessFragment(), "UILessFragment").commit();
+        mViewModel.fetchData();
+        getSupportFragmentManager().beginTransaction()
+                .add(new UILessFragment(),"UILessFragment").commit();
     }
 
     @Override
@@ -88,41 +88,45 @@ public class MainActivity extends LocationActivity implements MainScreen {
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                if (System.currentTimeMillis() - mLastFetchedDataTimeStamp < DATA_FETCHING_INTERVAL){
+                if (System.currentTimeMillis() - mLastFetchedDataTimeStamp < DATA_FETCHING_INTERVAL) {
                     Log.d(TAG, "\tNot fetching from network because interval didn't reach");
                     mSwipeRefreshLayout.setRefreshing(false);
                     return;
                 }
-
                 mViewModel.fetchData();
             }
         });
-
         mAdapter = new MyCryptoAdapter();
         LinearLayoutManager lm = new LinearLayoutManager(this);
         lm.setOrientation(LinearLayoutManager.VERTICAL);
         recView.setLayoutManager(lm);
         recView.setAdapter(mAdapter);
         recView.addItemDecoration(new Divider(this));
-
         setSupportActionBar(toolbar);
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
                 recView.smoothScrollToPosition(0);
             }
         });
-        //fab.setOnClickListener(view -> recView.smoothScrollToPosition(0));
+        fab=findViewById(R.id.fabExit);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MainActivity.this.finish();
+            }
+        });
     }
 
     private void showErrorToast(String error) {
-        Toast.makeText(this, "Error:" + error, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Error:" + error, Toast.LENGTH_LONG).show();
     }
 
     @Override
-    public void updateData(List<CoinModel> list) {
-        mAdapter.setItems(list);
+    public void updateData(List<CoinModel> data) {
+        mLastFetchedDataTimeStamp=System.currentTimeMillis();
+        mAdapter.setItems(data);
         mAdapter.notifyDataSetChanged();
         mSwipeRefreshLayout.setRefreshing(false);
     }
@@ -130,14 +134,5 @@ public class MainActivity extends LocationActivity implements MainScreen {
     @Override
     public void setError(String msg) {
         showErrorToast(msg);
-    }
-
-    @Override
-    protected void onDestroy() {
-        mViewModel.unbind();
-        Log.d(TAG, "before onDestroy called");
-        super.onDestroy();
-        Log.d(TAG, "after onDestroy called");
-
     }
 }

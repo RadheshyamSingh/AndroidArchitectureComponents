@@ -19,7 +19,7 @@ public class CryptoMapper extends ObjectMapper {
         ArrayList<CryptoCoinEntity> data = null;
 
         try {
-            data = readValue(jsonStr, new TypeReference() {
+            data = readValue(jsonStr, new TypeReference<ArrayList<CryptoCoinEntity>>() {
             });
         } catch (Exception e) {
         }
@@ -32,9 +32,8 @@ public class CryptoMapper extends ObjectMapper {
         CryptoCoinEntity entity;
         for (int i = 0; i < datum.size(); i++) {
             entity = datum.get(i);
-            int url = (i % 2 == 0) ? R.drawable.bitcoin : R.drawable.ethereum;
             listData.add(new CoinModel(entity.getName(), entity.getSymbol(),
-                    url,entity.getPriceUsd(),
+                    String.format(CRYPTO_URL_PATH, entity.getId()),entity.getPriceUsd(),
                     entity.get24hVolumeUsd(), Double.valueOf(entity.getMarketCapUsd())));
         }
 
